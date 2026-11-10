@@ -263,6 +263,8 @@ input,select,button,textarea{letter-spacing:inherit}
 .pgin{animation:pgin .32s ease-out}
 @keyframes pgin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){#navpill{transition:none}#nav button.pop svg,.pgin{animation:none}}
+.okmsg{color:var(--acc);font-size:13px;min-height:18px;margin-top:6px}
+#acB .btns .btn{flex:1}
 </style>
 </head>
 <body>
@@ -410,19 +412,9 @@ input,select,button,textarea{letter-spacing:inherit}
 
     <div class="btns">
       <button class="btn" id="out" type="button">로그아웃</button>
-      <button class="btn danger" id="delbtn" type="button">계정 삭제</button>
+      <button class="btn" id="accbtn" type="button">계정 설정</button>
     </div>
-    <section id="delacc" hidden>
-      <h2>계정 삭제</h2>
-      <label for="dpw">비밀번호</label>
-      <input type="password" id="dpw" autocomplete="current-password">
-      <label class="pk" style="border-top:0;margin-top:8px"><input type="checkbox" id="dchk"><span class="m"><b>모든 기록을 삭제합니다</b></span></label>
-      <div class="err" id="derr" role="alert"></div>
-      <div class="btns">
-        <button class="btn" id="dcancel" type="button">취소</button>
-        <button class="btn danger" id="dgo" type="button">삭제</button>
-      </div>
-    </section>
+
   </div>
 
   <div id="emodal" class="mo" hidden>
@@ -440,6 +432,31 @@ input,select,button,textarea{letter-spacing:inherit}
       <div class="err" id="err" role="alert"></div>
       <button class="add" id="add" type="button">저장</button>
       <div class="btns" id="fx" hidden><button class="btn" id="fcancel" type="button">취소</button><button class="btn" id="fdel" type="button">삭제</button></div>
+    </div>
+  </div>
+
+  <div id="acmodal" class="mo" hidden>
+    <div class="mc" role="dialog" aria-modal="true" aria-labelledby="actit">
+      <div class="sh"><h2 id="actit">계정 설정</h2><button class="ibtn" id="acclose" type="button" aria-label="닫기">✕</button></div>
+      <div id="acA">
+        <div class="f">
+          <div class="w"><label for="cpw">현재 비밀번호</label><input type="password" id="cpw" autocomplete="current-password"></div>
+          <div class="w"><label for="npw1">새 비밀번호</label><input type="password" id="npw1" autocomplete="new-password"></div>
+          <div class="w"><label for="npw2">비밀번호 확인</label><input type="password" id="npw2" autocomplete="new-password"></div>
+        </div>
+        <div class="err" id="cperr" role="alert"></div>
+        <div class="okmsg" id="cpok" role="status"></div>
+        <button class="add" id="cpgo" type="button">변경</button>
+        <button class="btn danger" id="acdel" type="button" style="margin-top:10px;width:100%">계정 삭제</button>
+      </div>
+      <div id="acB" hidden>
+        <div class="f"><div class="w"><label for="dpw">현재 비밀번호</label><input type="password" id="dpw" autocomplete="current-password"></div></div>
+        <div class="err" id="derr" role="alert"></div>
+        <div class="btns">
+          <button class="btn" id="dcancel" type="button">취소</button>
+          <button class="btn danger" id="dgo" type="button">삭제</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -502,7 +519,7 @@ input,select,button,textarea{letter-spacing:inherit}
   function today(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
   function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
   function fail(msg,e){$("gerr").textContent=msg;if(e)console.error(e)}
-  function show(on){$("login").hidden=on;$("app").hidden=!on;if(!on)$("delacc").hidden=true}
+  function show(on){$("login").hidden=on;$("app").hidden=!on;if(!on)$("acmodal").hidden=true}
   function toTx(r){return{id:r.id,type:r.type,date:r.date,amount:Number(r.amount),cat:r.category,memo:r.memo||"",place:r.place||"",method:r.method||"",rid:r.recurring_id||null}}
 
   function fillCats(){
@@ -1235,6 +1252,7 @@ input,select,button,textarea{letter-spacing:inherit}
     else if(!$("emodal").hidden)endEdit();
     else if(!$("amodal").hidden)$("amodal").hidden=true;
     else if(!$("bmodal").hidden)closeBudget();
+    else if(!$("acmodal").hidden)closeAcc();
   });
   $("freset").addEventListener("click",function(){[].slice.call($("fmodal").querySelectorAll("input")).forEach(function(i){i.checked=false})});
   $("fapply").addEventListener("click",function(){
@@ -1243,15 +1261,37 @@ input,select,button,textarea{letter-spacing:inherit}
     $("fmodal").hidden=true;renderC();
   });
   var uemail="";
-  $("delbtn").addEventListener("click",function(){
-    var sc=$("delacc");sc.hidden=!sc.hidden;
-    if(!sc.hidden){$("dpw").value="";$("dchk").checked=false;$("derr").textContent="";if(sc.scrollIntoView)sc.scrollIntoView({block:"nearest",behavior:"smooth"})}
+  function accView(v){$("acA").hidden=v!=="A";$("acB").hidden=v!=="B";$("actit").textContent=v==="A"?"계정 설정":"계정 삭제"}
+  function openAcc(){
+    ["cpw","npw1","npw2","dpw"].forEach(function(id){$(id).value=""});
+    ["cperr","cpok","derr"].forEach(function(id){$(id).textContent=""});
+    accView("A");$("acmodal").hidden=false;
+  }
+  function closeAcc(){$("acmodal").hidden=true}
+  $("accbtn").addEventListener("click",openAcc);
+  $("acclose").addEventListener("click",closeAcc);
+  $("acmodal").addEventListener("click",function(e){if(e.target===this)closeAcc()});
+  $("acdel").addEventListener("click",function(){$("derr").textContent="";$("dpw").value="";accView("B")});
+  $("dcancel").addEventListener("click",function(){accView("A")});
+  $("cpgo").addEventListener("click",async function(){
+    var cur=$("cpw").value,n1=$("npw1").value,n2=$("npw2").value;
+    $("cpok").textContent="";
+    if(!cur){$("cperr").textContent="현재 비밀번호를 입력해 주세요.";return}
+    if(n1.length<6){$("cperr").textContent="새 비밀번호는 6자 이상이어야 해요.";return}
+    if(n1!==n2){$("cperr").textContent="새 비밀번호가 서로 달라요.";return}
+    if(n1===cur){$("cperr").textContent="현재 비밀번호와 다른 비밀번호를 입력해 주세요.";return}
+    $("cperr").textContent="";$("cpgo").disabled=true;
+    var v=await sb.auth.signInWithPassword({email:uemail,password:cur});
+    if(v.error){$("cpgo").disabled=false;$("cperr").textContent="현재 비밀번호가 맞지 않아요.";return}
+    var r=await sb.auth.updateUser({password:n1});
+    $("cpgo").disabled=false;
+    if(r.error){$("cperr").textContent="비밀번호를 바꾸지 못했어요. ("+r.error.message+")";return}
+    ["cpw","npw1","npw2"].forEach(function(id){$(id).value=""});
+    $("cpok").textContent="비밀번호가 변경되었어요.";
   });
-  $("dcancel").addEventListener("click",function(){$("delacc").hidden=true});
   $("dgo").addEventListener("click",async function(){
     var pw=$("dpw").value;
     if(!pw){$("derr").textContent="비밀번호를 입력해 주세요.";return}
-    if(!$("dchk").checked){$("derr").textContent='"모든 기록을 삭제합니다"에 체크해 주세요.';return}
     $("derr").textContent="";$("dgo").disabled=true;
     var v=await sb.auth.signInWithPassword({email:uemail,password:pw});
     if(v.error){$("dgo").disabled=false;$("derr").textContent="비밀번호가 맞지 않아요.";return}
@@ -1261,7 +1301,7 @@ input,select,button,textarea{letter-spacing:inherit}
     try{await sb.auth.signOut()}catch(e){}
     try{Object.keys(localStorage).forEach(function(k){if(k.indexOf("sb-")===0)localStorage.removeItem(k)})}catch(e){}
     tx=[];REC=[];AST=[];uid=null;uemail="";
-    show(false);$("em").value="";$("pw").value="";$("aerr").textContent="계정이 삭제되었어요.";
+    closeAcc();show(false);$("em").value="";$("pw").value="";$("aerr").textContent="계정이 삭제되었어요.";
   });
 
   async function start(user){uid=user.id;uemail=user.email||"";show(true);showPage("rec");$("pw").value="";await loadAll()}
